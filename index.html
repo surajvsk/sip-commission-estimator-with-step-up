@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIP Commission Estimator</title>
+    <style>
+        /* General body styling */
+        body {
+            font-family: 'Inter', sans-serif; /* Using Inter font as per instructions */
+            margin: 0;
+            background-color: #f4f4f4; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 20px; /* Space from the top */
+        }
+
+        /* Main container for the calculator */
+        .container {
+            background-color: #fff; /* White background for the card */
+            padding: 20px;
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            width: 90%; /* Responsive width */
+            max-width: 960px; /* Maximum width for larger screens */
+            box-sizing: border-box; /* Include padding in width calculation */
+        }
+
+        /* Header section styling */
+        .header {
+            background-color: #78c257; /* Green header background */
+            color: white; /* White text */
+            padding: 15px;
+            border-radius: 6px 6px 0 0; /* Rounded top corners */
+            margin-bottom: 20px;
+            text-align: center; /* Center align header text */
+        }
+
+        /* Calculator input sections grid layout */
+        .calculator-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two columns for inputs */
+            gap: 20px; /* Space between grid items */
+            margin-bottom: 20px;
+        }
+
+        /* Input group styling (label + input) */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block; /* Label on its own line */
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333; /* Darker label text */
+        }
+
+        .input-group input {
+            width: calc(100% - 16px); /* Full width minus padding */
+            padding: 10px; /* Larger padding for inputs */
+            border: 1px solid #ccc; /* Light gray border */
+            border-radius: 4px; /* Slightly rounded input corners */
+            box-sizing: border-box; /* Include padding in width */
+            font-size: 1em; /* Readable font size */
+        }
+
+        /* Hide number input spin buttons for better aesthetics */
+        .input-group input::-webkit-outer-spin-button,
+        .input-group input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .input-group input[type=number] {
+            -moz-appearance: textfield; /* Firefox equivalent */
+        }
+
+        /* Slider group styling */
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-container input[type="range"] {
+            flex-grow: 1; /* Slider takes available space */
+            margin-right: 10px;
+            -webkit-appearance: none; /* Remove default slider styles */
+            width: 100%; /* Full width */
+            height: 8px; /* Thicker slider track */
+            background: #ddd; /* Light track background */
+            outline: none; /* Remove outline */
+            opacity: 0.7;
+            -webkit-transition: .2s; /* Smooth transition for hover */
+            transition: opacity .2s;
+            border-radius: 4px; /* Rounded track */
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; /* Remove default thumb styles */
+            appearance: none;
+            width: 20px; /* Larger thumb */
+            height: 20px;
+            border-radius: 50%; /* Circular thumb */
+            background: #78c257; /* Green thumb */
+            cursor: pointer;
+            border: 2px solid #fff; /* White border for contrast */
+            box-shadow: 0 0 2px rgba(0,0,0,0.3); /* Subtle shadow */
+        }
+
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #78c257;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 2px rgba(0,0,0,0.3);
+        }
+
+        /* Output sections grid layout */
+        .output-section {
+            display: grid;
+            grid-template-columns: 1fr; /* Single column by default */
+            gap: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Styling for the main total value display */
+        .total-value {
+            font-size: 1.8em; /* Larger font size */
+            color: #78c257; /* Green color */
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Chart container for responsiveness */
+        .chart-container {
+            width: 100%; /* Full width for the chart */
+            max-width: 300px; /* Max width for chart to keep it compact */
+            height: 300px; /* Fixed height for consistency */
+            margin: 0 auto; /* Center the chart */
+            position: relative;
+        }
+
+        #donutChart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Legend styling for the chart */
+        .chart-legend {
+            list-style: none; /* Remove bullet points */
+            padding: 0;
+            margin-top: 20px;
+            text-align: left; /* Align legend items to the left */
+        }
+
+        .chart-legend li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 1.1em; /* Slightly larger text */
+            color: #555;
+        }
+
+        .legend-color {
+            width: 20px; /* Larger color swatch */
+            height: 20px;
+            border-radius: 50%; /* Circular swatch */
+            margin-right: 10px;
+            flex-shrink: 0; /* Prevent shrinking on small screens */
+            box-shadow: 0 0 3px rgba(0,0,0,0.2); /* Subtle shadow for color swatches */
+        }
+
+        /* Yearly breakdown table styling */
+        .yearly-breakdown {
+            width: 100%;
+            border-collapse: collapse; /* Collapse borders */
+            margin-top: 30px;
+            font-size: 0.95em;
+        }
+
+        .yearly-breakdown th, .yearly-breakdown td {
+            border: 1px solid #ddd; /* Light border for cells */
+            padding: 12px; /* More padding for readability */
+            text-align: left;
+        }
+
+        .yearly-breakdown th {
+            background-color: #78c257; /* Green header for table */
+            color: white;
+            font-weight: bold;
+        }
+
+        .yearly-breakdown tbody tr:nth-child(even) {
+            background-color: #f9f9f9; /* Zebra striping for table rows */
+        }
+
+        /* Adjustments for value display next to sliders */
+        #durationValue, #rateValue, #commissionRateValue {
+            margin-left: 8px;
+            font-weight: normal; /* Make the value less bold than the label */
+            color: #000;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .calculator-section {
+                grid-template-columns: 1fr; /* Stack inputs on small screens */
+            }
+            .output-section {
+                grid-template-columns: 1fr; /* Stack outputs on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>SIP Commission Estimator with Step-Up</h2>
+        </div>
+        <!-- Input section for calculator parameters -->
+        <div class="calculator-section">
+            <div class="input-group">
+                <label for="monthlyInvestment">Monthly Investment Amount (₹)</label>
+                <input type="number" id="monthlyInvestment" value="5000">
+            </div>
+            <div class="input-group">
+                <label for="stepUpAmount">Step-Up Amount per Year (₹)</label>
+                <input type="number" id="stepUpAmount" value="0">
+            </div>
+            <div class="slider-group">
+                <label for="duration">Select Duration: <span id="durationValue">5</span> Years</label>
+                <div class="slider-container">
+                    <input type="range" id="duration" min="1" max="30" value="5">
+                </div>
+            </div>
+            <div class="slider-group">
+                <label for="rateOfReturn">Expected Rate of Return: <span id="rateValue">26</span>% p.a.</label>
+                <div class="slider-container">
+                    <input type="range" id="rateOfReturn" min="1" max="35" value="26" step="0.1">
+                </div>
+            </div>
+            <div class="slider-group">
+                <label for="commissionRate">Commission Rate: <span id="commissionRateValue">1.2</span>% p.a.</label>
+                <div class="slider-container">
+                    <input type="range" id="commissionRate" min="0.1" max="5" value="1.2" step="0.01">
+                </div>
+            </div>
+            <div></div> <!-- Empty div for grid alignment if needed -->
+        </div>
+
+        <!-- Output section displaying results -->
+        <div class="output-section">
+            <div>
+                <h3>Total Investment Value after <span id="outputDuration">5</span> Years</h3>
+                <div class="total-value">₹ <span id="totalValue">0.00</span></div>
+            </div>
+            <div>
+                <h3>Average AUM over <span id="outputDurationAvgAUM">5</span> Years</h3>
+                <div class="total-value">₹ <span id="averageAUMValue">0.00</span></div>
+            </div>
+            <div class="chart-container">
+                <canvas id="donutChart"></canvas>
+            </div>
+            <div>
+                <ul class="chart-legend">
+                    <li><span class="legend-color" style="background-color: #78c257;"></span> Invested Amount: ₹ <span id="investedAmount">0</span></li>
+                    <li><span class="legend-color" style="background-color: #36a2eb;"></span> Est. Returns (after commission): ₹ <span id="estReturns">0</span></li>
+                    <li><span class="legend-color" style="background-color: #ff9f40;"></span> Commission Earned: ₹ <span id="commissionEarned">0</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Yearly breakdown table -->
+        <div>
+            <h3>Yearly Trail Commission Breakdown</h3>
+            <table class="yearly-breakdown">
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Monthly SIP (₹)</th>
+                        <th>Total AUM (₹)</th>
+                        <th>Trail Commission (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="yearlyBreakdownBody">
+                    <!-- Dynamic content will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chart.js library for creating the donut chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Get references to all necessary HTML elements
+        const monthlyInvestmentInput = document.getElementById('monthlyInvestment');
+        const stepUpAmountInput = document.getElementById('stepUpAmount');
+        const durationSlider = document.getElementById('duration');
+        const durationValueSpan = document.getElementById('durationValue');
+        const outputDurationSpan = document.getElementById('outputDuration');
+        const outputDurationAvgAUMSpan = document.getElementById('outputDurationAvgAUM'); // New element for Average AUM duration
+        const rateOfReturnSlider = document.getElementById('rateOfReturn');
+        const rateValueSpan = document.getElementById('rateValue');
+        const commissionRateSlider = document.getElementById('commissionRate');
+        const commissionRateValueSpan = document.getElementById('commissionRateValue');
+        const totalValueSpan = document.getElementById('totalValue');
+        const investedAmountSpan = document.getElementById('investedAmount');
+        const estReturnsSpan = document.getElementById('estReturns');
+        const commissionEarnedSpan = document.getElementById('commissionEarned');
+        const averageAUMValueSpan = document.getElementById('averageAUMValue'); // New element for Average AUM
+        const yearlyBreakdownBody = document.getElementById('yearlyBreakdownBody');
+        const donutChartCanvas = document.getElementById('donutChart');
+        let donutChart; // Variable to hold the Chart.js instance
+
+        /**
+         * Calculates SIP details including total investment, future value (AUM), estimated returns,
+         * total commission earned, average AUM, and a yearly breakdown.
+         * @param {number} monthlyInvestment - The initial monthly SIP amount.
+         * @param {number} stepUp - The annual step-up amount for SIP.
+         * @param {number} durationYears - The total duration of the SIP in years.
+         * @param {number} rateOfReturn - The expected annual rate of return (in percentage).
+         * @param {number} commissionRate - The annual commission rate (in percentage).
+         * @returns {object} An object containing all calculated results.
+         */
+        function calculateSIP(monthlyInvestment, stepUp, durationYears, rateOfReturn, commissionRate) {
+            const monthlyRate = rateOfReturn / 100 / 12; // Convert annual rate to monthly
+            let totalInvestment = 0;
+            let yearlyData = []; // Stores data for the yearly breakdown table
+            let currentAUM = 0; // Represents AUM at the beginning of the current year (or after previous year's commission)
+            let totalAUMSumForAverage = 0; // Accumulator for calculating average AUM
+
+            for (let year = 1; year <= durationYears; year++) {
+                let annualInvestmentForThisYear = 0;
+                // Calculate monthly investment for the current year, considering step-up
+                let monthlyInvestmentForThisYear = monthlyInvestment + (year - 1) * stepUp;
+
+                let aumAtEndOfYearBeforeCommission = currentAUM; // Start with AUM from previous year
+
+                // Simulate month-by-month compounding within the current year
+                for (let month = 0; month < 12; month++) {
+                    aumAtEndOfYearBeforeCommission = (aumAtEndOfYearBeforeCommission + monthlyInvestmentForThisYear) * (1 + monthlyRate);
+                    annualInvestmentForThisYear += monthlyInvestmentForThisYear;
+                }
+
+                totalInvestment += annualInvestmentForThisYear; // Accumulate total investment across all years
+
+                // Calculate annual commission based on the AUM at the end of the year *before* commission deduction
+                const annualCommission = aumAtEndOfYearBeforeCommission * (commissionRate / 100);
+
+                // Calculate AUM after deducting commission for the current year
+                const aumAfterCommission = aumAtEndOfYearBeforeCommission - annualCommission;
+
+                // Add the AUM before commission for the average AUM calculation
+                // The average AUM typically refers to the average assets under management before trail fees.
+                totalAUMSumForAverage += aumAtEndOfYearBeforeCommission;
+
+                // Store data for the yearly breakdown table
+                yearlyData.push({
+                    year: year,
+                    monthlySIP: monthlyInvestmentForThisYear, // SIP amount for this year
+                    totalAUM: aumAfterCommission, // AUM at the end of this year, after commission
+                    trailCommission: annualCommission // Commission earned for this year
+                });
+
+                currentAUM = aumAfterCommission; // Carry forward the AUM after commission to the next year
+            }
+
+            // Final total value is the AUM remaining in the client's account after all commissions
+            const totalValue = currentAUM;
+
+            // Total commission earned over the entire duration
+            const totalCommission = yearlyData.reduce((sum, data) => sum + data.trailCommission, 0);
+
+            // Estimated returns for the client (total AUM after commission minus total investment)
+            const estimatedReturns = totalValue - totalInvestment;
+
+            // Calculate Average AUM over the entire duration
+            // This is the sum of year-end AUMs (before commission deduction) divided by the number of years.
+            const averageAUM = totalAUMSumForAverage / durationYears;
+
+            return {
+                totalInvestment,
+                totalValue,
+                estimatedReturns,
+                totalCommission,
+                averageAUM, // Include average AUM in the returned object
+                yearlyData
+            };
+        }
+
+        /**
+         * Updates all output elements and charts based on the calculated SIP results.
+         */
+        function updateOutput() {
+            // Parse input values from HTML elements
+            const monthlyInvestment = parseFloat(monthlyInvestmentInput.value);
+            const stepUpAmount = parseFloat(stepUpAmountInput.value);
+            const duration = parseInt(durationSlider.value);
+            const rateOfReturn = parseFloat(rateOfReturnSlider.value);
+            const commissionRate = parseFloat(commissionRateSlider.value);
+
+            // Update text content for slider values and output durations
+            durationValueSpan.textContent = duration;
+            outputDurationSpan.textContent = duration;
+            outputDurationAvgAUMSpan.textContent = duration; // Update average AUM duration display
+            rateValueSpan.textContent = rateOfReturn.toFixed(1); // One decimal place for rate
+            commissionRateValueSpan.textContent = commissionRate.toFixed(2); // Two decimal places for commission
+
+            // Perform the SIP calculation
+            const results = calculateSIP(monthlyInvestment, stepUpAmount, duration, rateOfReturn, commissionRate);
+
+            // Update the main output numbers, formatted for Indian Rupees
+            totalValueSpan.textContent = results.totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            investedAmountSpan.textContent = results.totalInvestment.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            estReturnsSpan.textContent = results.estimatedReturns.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            commissionEarnedSpan.textContent = results.totalCommission.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            averageAUMValueSpan.textContent = results.averageAUM.toLocaleString('en-IN', { maximumFractionDigits: 0 }); // Display average AUM
+
+            // Update the yearly breakdown table
+            updateYearlyBreakdown(results.yearlyData);
+
+            // Update the donut chart with the breakdown of funds
+            // The chart represents (Invested Amount + Est. Returns (after commission) + Commission Earned)
+            // which sums up to the total potential wealth created before final commission distribution.
+            updateDonutChart(results.totalInvestment, results.estimatedReturns, results.totalCommission);
+        }
+
+        /**
+         * Populates the yearly breakdown table with calculated data.
+         * @param {Array<object>} yearlyData - An array of objects, each containing yearly SIP, AUM, and commission.
+         */
+        function updateYearlyBreakdown(yearlyData) {
+            yearlyBreakdownBody.innerHTML = ''; // Clear existing table rows
+            yearlyData.forEach(data => {
+                const row = yearlyBreakdownBody.insertRow(); // Insert a new row
+                const yearCell = row.insertCell();
+                const monthlySIPCell = row.insertCell();
+                const totalAUMCell = row.insertCell();
+                const trailCommissionCell = row.insertCell();
+
+                // Populate cells with formatted data
+                yearCell.textContent = data.year;
+                monthlySIPCell.textContent = data.monthlySIP.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+                totalAUMCell.textContent = data.totalAUM.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+                trailCommissionCell.textContent = data.trailCommission.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            });
+        }
+
+        /**
+         * Initializes or updates the Chart.js donut chart.
+         * @param {number} invested - The total invested amount.
+         * @param {number} returns - The estimated returns (after commission) for the client.
+         * @param {number} commission - The total commission earned by the advisor.
+         */
+        function updateDonutChart(invested, returns, commission) {
+            const data = {
+                labels: ['Invested Amount', 'Est. Returns (after commission)', 'Commission Earned'],
+                datasets: [{
+                    data: [invested, returns, commission],
+                    backgroundColor: ['#78c257', '#36a2eb', '#ff9f40'], // Colors for the slices
+                    hoverOffset: 4 // Slight offset on hover for visual feedback
+                }]
+            };
+
+            const config = {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Allows chart to resize freely within its container
+                    plugins: {
+                        legend: {
+                            display: false, // Hide default legend as we have a custom one
+                        },
+                        tooltip: {
+                            // Custom tooltip formatting for currency
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        // Format as Indian Rupee currency
+                                        label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                },
+            };
+
+            // Destroy existing chart instance before creating a new one to prevent memory leaks and conflicts
+            if (donutChart) {
+                donutChart.destroy();
+            }
+            donutChart = new Chart(donutChartCanvas, config); // Create new chart instance
+        }
+
+        // Add event listeners to all input elements to trigger updates on change
+        monthlyInvestmentInput.addEventListener('input', updateOutput);
+        stepUpAmountInput.addEventListener('input', updateOutput);
+        durationSlider.addEventListener('input', updateOutput);
+        rateOfReturnSlider.addEventListener('input', updateOutput);
+        commissionRateSlider.addEventListener('input', updateOutput);
+
+        // Initial calculation and display when the page loads
+        updateOutput();
+    </script>
+</body>
+</html>
